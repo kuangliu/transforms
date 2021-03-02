@@ -37,6 +37,11 @@ class RandomFlip:
                 boxes = self.flip_boxes(boxes)
         return imgs if boxes is None else (imgs, boxes)
 
+    def __repr__(self):
+        s = self.__class__.__name__
+        s += f'(flip_ratio={self.flip_ratio})'
+        return s
+
 
 if __name__ == '__main__':
     img = cv2.imread('./img/test.jpg')
@@ -45,6 +50,7 @@ if __name__ == '__main__':
     print(boxes)
 
     flip = RandomFlip(flip_ratio=0.5)
+    print(flip)
     img, boxes = flip(img, boxes)
     print(img.shape)
     print(boxes)

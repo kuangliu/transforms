@@ -44,6 +44,12 @@ class Resize:
                 boxes = self.resize_boxes(boxes)
         return imgs if boxes is None else (imgs, boxes)
 
+    def __repr__(self):
+        s = self.__class__.__name__
+        s += f'(img_scale={self.img_scale}), '
+        s += f'(keep_ratio={self.keep_ratio})'
+        return s
+
 
 if __name__ == '__main__':
     img = cv2.imread('./img/test.jpg')
@@ -52,6 +58,7 @@ if __name__ == '__main__':
     print(boxes)
 
     resize = Resize((100, 100), keep_ratio=True)
+    print(resize)
     img, boxes = resize(img, boxes)
     print(img.shape)
     print(boxes)
