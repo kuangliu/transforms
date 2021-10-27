@@ -81,6 +81,22 @@ def test_yolox_distort(img):
     cv2.imwrite('z.png', img_t)
 
 
+def test_letterbox(img, boxes):
+    print(img.shape)
+    h, w = img.shape[:2]
+    augs = T.AugmentationList([
+        T.RandomLetterbox((500, 500))
+    ])
+    print(augs)
+    data = T.AugInput(img, boxes=boxes)
+    transform = augs(data)
+    img_t = data.image
+    print(img_t.shape)
+    boxes_t = data.boxes
+    cv2.imwrite('z.png', img_t)
+    print(boxes_t)
+
+
 if __name__ == '__main__':
     img = cv2.imread('./img/test.jpg')
     boxes = np.array([[0, 0, 100, 100]]).astype(np.float32)
@@ -89,4 +105,5 @@ if __name__ == '__main__':
     # test_crop(img, boxes)
     # test_resize(img, boxes)
     # test_extent(img, boxes)
-    test_yolox_distort(img)
+    # test_yolox_distort(img)
+    test_letterbox(img, boxes)

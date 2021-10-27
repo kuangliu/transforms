@@ -34,6 +34,7 @@ __all__ = [
     "ColorTransform",
     "PILColorTransform",
     "ColorDistortTransform",
+    "LetterboxTransform",
 ]
 
 
@@ -287,13 +288,7 @@ class ColorTransform(Transform):
 
 
 class ColorDistortTransform(Transform):
-    """
-    Generic wrapper for any photometric transforms.
-    These transformations should only affect the color space and
-        not the coordinate space of the image (e.g. annotation
-        coordinates such as bounding boxes should not be changed)
-
-    This is used in YOLOX data augmentation scheme.
+    """Color distortion transform used in YOLOX.
 
     Reference: https://github.com/ifzhang/ByteTrack/blob/main/yolox/data/data_augment.py#L150
     """
@@ -330,6 +325,42 @@ class ColorDistortTransform(Transform):
 
     def apply_coords(self, coords):
         return coords
+
+    def inverse(self):
+        return NoOpTransform()
+
+    def apply_segmentation(self, segmentation):
+        return segmentation
+
+
+class LetterboxTransform(Transform):
+    """Letterbox transform used in YOLOX.
+
+    Reference: https://github.com/ifzhang/ByteTrack/blob/main/yolox/data/data_augment.py#L150
+    """
+
+    def __init__(self, target_size, scale, dx, dy):
+        super().__init__()
+        self._set_attributes(locals())
+
+    def apply_image(self, img):
+        img_h, img_w, _ = img.shape
+        sw = int(self.scale * img_w)
+        sh = int(self.scale * img_h)
+        resized = cv2.resize(img, (sw, sh), interpolation=cv2.INTER_LINEAR)
+        out_w, out_h = self.target_size
+        pad_img = np.ones((out_h, out_w, 3)) * 114.0
+        dx, dy = self.dx, self.dy
+        pad_img[dy:dy+sh, dx:dx+sw, :] = resized
+        return pad_img
+
+    def apply_coords(self, coords):
+        new_coords = coords.astype(np.float32)
+        new_coords[:, 0] *= self.scale
+        new_coords[:, 1] *= self.scale
+        new_coords[:, 0] += self.dx
+        new_coords[:, 1] += self.dy
+        return new_coords
 
     def inverse(self):
         return NoOpTransform()

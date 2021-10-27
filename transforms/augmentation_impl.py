@@ -17,7 +17,7 @@ from fvcore.transforms.transform import (
 from PIL import Image
 
 from .augmentation import Augmentation, _transform_to_aug
-from .transform import ExtentTransform, ResizeTransform, RotationTransform, ColorDistortTransform
+from .transform import ExtentTransform, ResizeTransform, RotationTransform, ColorDistortTransform, LetterboxTransform
 
 __all__ = [
     "RandomApply",
@@ -33,6 +33,7 @@ __all__ = [
     "Resize",
     "ResizeShortestEdge",
     "RandomCrop_CategoryAreaConstraint",
+    "RandomLetterbox",
 ]
 
 
@@ -530,3 +531,23 @@ class RandomColorDistort(Augmentation):
         if random.randrange(2):
             s_alpha = random.uniform(0.5, 1.5)
         return ColorDistortTransform(alpha, beta, h_delta, s_alpha)
+
+
+class RandomLetterbox(Augmentation):
+    """Random paste transform."""
+
+    def __init__(self, target_size):
+        super().__init__()
+        self._init(locals())
+
+    def get_transform(self, image):
+        assert image.shape[-1] == 3, "RandomLighting only works on RGB images"
+        img_h, img_w, _ = image.shape
+        out_w, out_h = self.target_size
+        scale = min(out_w/img_w, out_h/img_h)
+        sw = int(scale * img_w)
+        sh = int(scale * img_h)
+        assert(out_w >= sw and out_h >= sh)
+        dx = random.randint(0, out_w - sw)
+        dy = random.randint(0, out_h - sh)
+        return LetterboxTransform(self.target_size, scale, dx, dy)
