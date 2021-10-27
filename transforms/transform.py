@@ -33,6 +33,7 @@ __all__ = [
     "RotationTransform",
     "ColorTransform",
     "PILColorTransform",
+    "ColorDistortTransform",
 ]
 
 
@@ -274,6 +275,58 @@ class ColorTransform(Transform):
 
     def apply_image(self, img):
         return self.op(img)
+
+    def apply_coords(self, coords):
+        return coords
+
+    def inverse(self):
+        return NoOpTransform()
+
+    def apply_segmentation(self, segmentation):
+        return segmentation
+
+
+class ColorDistortTransform(Transform):
+    """
+    Generic wrapper for any photometric transforms.
+    These transformations should only affect the color space and
+        not the coordinate space of the image (e.g. annotation
+        coordinates such as bounding boxes should not be changed)
+
+    This is used in YOLOX data augmentation scheme.
+
+    Reference: https://github.com/ifzhang/ByteTrack/blob/main/yolox/data/data_augment.py#L150
+    """
+
+    def __init__(self, alpha, beta, h_delta, s_alpha):
+        super().__init__()
+        self._set_attributes(locals())
+
+    def _convert(self, img, alpha=1, beta=0):
+        tmp = img.astype(float) * alpha + beta
+        tmp[tmp < 0] = 0
+        tmp[tmp > 255] = 255
+        img[:] = tmp
+
+    def apply_image(self, img):
+        img = img.copy()
+        if self.beta is not None:
+            self._convert(img, beta=self.beta)
+
+        if self.alpha is not None:
+            self._convert(img, alpha=self.alpha)
+
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        if self.h_delta is not None:
+            tmp = img[:, :, 0].astype(int) + self.h_delta
+            tmp %= 180
+            img[:, :, 0] = tmp
+
+        if self.s_alpha is not None:
+            self._convert(img[:, :, 1], alpha=self.s_alpha)
+
+        img = cv2.cvtColor(img, cv2.COLOR_HSV2BGR)
+        return img
 
     def apply_coords(self, coords):
         return coords
