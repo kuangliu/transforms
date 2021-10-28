@@ -97,6 +97,29 @@ def test_letterbox(img, boxes):
     print(boxes_t)
 
 
+def test_perspective(img, boxes):
+    print(img.shape)
+    h, w = img.shape[:2]
+    augs = T.AugmentationList([
+        T.RandomPerspective(
+            degrees=10,
+            translate=0.1,
+            scale=(0.5, 1.5),
+            shear=2.0,
+            perspective=0.0,
+            border=(100, 100),
+        )
+    ])
+    print(augs)
+    data = T.AugInput(img, boxes=boxes)
+    transform = augs(data)
+    img_t = data.image
+    print(img_t.shape)
+    boxes_t = data.boxes
+    cv2.imwrite('z.png', img_t)
+    print(boxes_t)
+
+
 if __name__ == '__main__':
     img = cv2.imread('./img/test.jpg')
     boxes = np.array([[0, 0, 100, 100]]).astype(np.float32)
@@ -106,4 +129,5 @@ if __name__ == '__main__':
     # test_resize(img, boxes)
     # test_extent(img, boxes)
     # test_yolox_distort(img)
-    test_letterbox(img, boxes)
+    # test_letterbox(img, boxes)
+    test_perspective(img, boxes)
