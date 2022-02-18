@@ -57,8 +57,8 @@ def test_extent(img, boxes):
     print(img.shape)
     h, w = img.shape[:2]
     augs = T.AugmentationList([
-        T.RandomExtent(scale_range=(3/4., 3/4.), shift_range=(0.2, 0.2)),
-        T.ResizeShortestEdge(800, 1400),
+        T.RandomExtent(scale_range=(3/4., 3/4.), shift_range=(0.2, 0.3)),
+        # T.ResizeShortestEdge(800, 1400),
     ])
     print(augs)
     data = T.AugInput(img, boxes=boxes)
@@ -120,6 +120,17 @@ def test_perspective(img, boxes):
     print(boxes_t)
 
 
+def test_cutout(img):
+    augs = T.AugmentationList([
+        T.Cutout(0.5),
+    ])
+    print(augs)
+    data = T.AugInput(img)
+    transform = augs(data)
+    img_t = data.image
+    cv2.imwrite('z.png', img_t)
+
+
 if __name__ == '__main__':
     img = cv2.imread('./img/test.jpg')
     boxes = np.array([[0, 0, 100, 100]]).astype(np.float32)
@@ -130,4 +141,5 @@ if __name__ == '__main__':
     # test_extent(img, boxes)
     # test_yolox_distort(img)
     # test_letterbox(img, boxes)
-    test_perspective(img, boxes)
+    # test_perspective(img, boxes)
+    test_cutout(img)

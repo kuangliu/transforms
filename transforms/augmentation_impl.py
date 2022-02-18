@@ -19,7 +19,7 @@ from fvcore.transforms.transform import (
 from PIL import Image
 
 from .augmentation import Augmentation, _transform_to_aug
-from .transform import ExtentTransform, ResizeTransform, RotationTransform, ColorDistortTransform, LetterboxTransform, PerspectiveTransform
+from .transform import ExtentTransform, ResizeTransform, RotationTransform, ColorDistortTransform, LetterboxTransform, PerspectiveTransform, CutoutTransform
 
 __all__ = [
     "RandomApply",
@@ -37,6 +37,7 @@ __all__ = [
     "RandomCrop_CategoryAreaConstraint",
     "RandomLetterbox",
     "RandomPerspective",
+    "Cutout",
 ]
 
 
@@ -534,6 +535,21 @@ class RandomColorDistort(Augmentation):
         if random.randrange(2):
             s_alpha = random.uniform(0.5, 1.5)
         return ColorDistortTransform(alpha, beta, h_delta, s_alpha)
+
+
+class Cutout(Augmentation):
+    def __init__(self, cut_ratio=0.5):
+        super().__init__()
+        self._init(locals())
+
+    def get_transform(self, image):
+        assert image.shape[-1] == 3, "RandomLighting only works on RGB images"
+        img_h, img_w, _ = image.shape
+        cut_w = int(self.cut_ratio * img_w)
+        cut_h = int(self.cut_ratio * img_h)
+        dx = random.randrange(0, img_w)
+        dy = random.randrange(0, img_h)
+        return CutoutTransform((dx, dy, cut_w, cut_h))
 
 
 class RandomLetterbox(Augmentation):
